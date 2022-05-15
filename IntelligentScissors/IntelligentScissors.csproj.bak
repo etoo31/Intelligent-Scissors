@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -21,7 +21,7 @@ namespace IntelligentScissors
 
         RGBPixel[,] ImageMatrix;
 
-        private async void btnOpen_Click(object sender, EventArgs e)
+        private void btnOpen_Click(object sender, EventArgs e)
         {
            
             OpenFileDialog openFileDialog1 = new OpenFileDialog();
@@ -62,67 +62,27 @@ namespace IntelligentScissors
                         continue;
 
                     int pointNum = (y + ySum[j]) * width + x + xSum[j];
-                    double cost;
-                    switch (direction[j])
+
+                    switch(direction[j])
                     {
                         case 'L':
-                            cost = ImageOperations.CalculateLeftPixelEnergy(x, y, ImageMatrix);
-                            if (cost == 0)
-                                cost = 1E16;
-                            else
-                                cost = 1 / cost;
-                            graph[i].Add(pointNum, cost);
+                            graph[i].Add(pointNum, 1 / ImageOperations.CalculateLeftPixelEnergy(x, y, ImageMatrix));
                             break;
                         case 'R':
-                            cost = ImageOperations.CalculateRightPixelEnergy(x, y, ImageMatrix);
-                            if (cost == 0)
-                                cost = 1E16;
-                            else
-                                cost = 1 / cost;
-                            graph[i].Add(pointNum, cost);
+                            graph[i].Add(pointNum, 1 / ImageOperations.CalculateRightPixelEnergy(x, y, ImageMatrix));
                             break;
                         case 'T':
-                            cost = ImageOperations.CalculateTopPixelEnergy(x, y, ImageMatrix);
-                            if (cost == 0)
-                                cost = 1E16;
-                            else
-                                cost = 1 / cost;
-                            graph[i].Add(pointNum, cost);
+                            graph[i].Add(pointNum, 1 / ImageOperations.CalculateTopPixelEnergy(x, y, ImageMatrix));
                             break;
                         case 'B':
-                            cost = ImageOperations.CalculateBottomPixelEnergy(x, y, ImageMatrix);
-                            if (cost == 0)
-                                cost = 1E16;
-                            else
-                                cost = 1 / cost;
-                            graph[i].Add(pointNum, cost);
+                            graph[i].Add(pointNum, 1 / ImageOperations.CalculateBottomPixelEnergy(x, y, ImageMatrix));
                             break;
                     }
 
-                    
+
                 }
 
             }
-
-            
-            string s = "";
-            
-            
-            for (int i = 0; i < graph.Length; i++)
-            {
-
-                s = s + "The  index node" + i + "\nEdges\n";
-                foreach (KeyValuePair<int, double> x in graph[i])
-                {
-                    s = s + "edge from " + i + " To " + x.Key + " With Weights " + x.Value + "\n";
-                    
-                    s = "";
-                }
-                s = s + "\n";
-            }
-
-            MessageBox.Show("Adjacency List generated");
-
         }
 
         private void btnGaussSmooth_Click(object sender, EventArgs e)
@@ -173,7 +133,7 @@ namespace IntelligentScissors
                     if(childParent.ContainsKey(child.Key))
                     {
                         //Found A Better Path
-                        if (childParent[child.Key].Value < child.Value + currentCost && !visited[child.Key])
+                        if (childParent[child.Key].Value < child.Value + currentCost)
                         {
                             childParent[child.Key] = new KeyValuePair<int, double>(currentNode, child.Value + currentCost);
                             queue.Enqueue(child.Key, child.Value + currentCost);
@@ -189,30 +149,20 @@ namespace IntelligentScissors
                 
 
             }
-            MessageBox.Show("Dijkstra Bare2a");
+
             //Generate Path
-            return getPath(childParent, end,start);
+            return getPath(childParent, end);
         }
 
-        private void MainForm_Load(object sender, EventArgs e)
-        {
-
-        }
-
-        public List<int> getPath(Dictionary<int, KeyValuePair<int, double>> childParent, int end, int start)
+        public List<int> getPath(Dictionary<int, KeyValuePair<int, double>> childParent, int end)
         {
             List<int> result = new List<int>();
-           
-            while (true)
+
+            while (childParent[end].Key != end)
             {
-                //MessageBox.Show(end + "->");
                 result.Add(end);
                 end = childParent[end].Key;
-                
-                if (end == start)
-                    break;
             }
-            
             result.Add(end);
             return Enumerable.Reverse(result).ToList();
         }
@@ -249,9 +199,8 @@ namespace IntelligentScissors
             
             int startNum = start.Y * width + start.X;
             int endNum = end.Y * width + end.X;
-            MessageBox.Show("Test 1");
             List<int> path = findShortestPath(startNum, endNum);
-            MessageBox.Show("Generated Path");
+
             Pen whitePen = new Pen(Color.White, 2f);
             Pen blackPen = new Pen(Color.Black, 0.5f);
 
