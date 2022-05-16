@@ -13,6 +13,11 @@ namespace IntelligentScissors
         public Point start, end;
         public bool startBool = false, endBool = false;
         public Dictionary<int, double>[] graph;
+        public Image image= null;
+        public int counter = 0;
+        Image buffer = null , buffer2 = null;
+        List<int> scissor;
+
         public MainForm()
         {
             InitializeComponent();
@@ -32,6 +37,7 @@ namespace IntelligentScissors
                 string OpenedFilePath = openFileDialog1.FileName;
                 ImageMatrix = ImageOperations.OpenImage(OpenedFilePath);
                 ImageOperations.DisplayImage(ImageMatrix, pictureBox1);
+                image = pictureBox1.Image;
             }
             txtWidth.Text = ImageOperations.GetWidth(ImageMatrix).ToString();
             txtHeight.Text = ImageOperations.GetHeight(ImageMatrix).ToString();
@@ -285,7 +291,7 @@ namespace IntelligentScissors
 
         private void button1_Click(object sender, EventArgs e)
         {
-            graph = new Dictionary<int, double>[5];
+            /*graph = new Dictionary<int, double>[5];
             for (int i = 0; i < 5; i++)
                 graph[i] = new Dictionary<int, double>();
 
@@ -306,7 +312,185 @@ namespace IntelligentScissors
             string s = "";
             foreach (int i in path)
                 s += i + "->";
-            MessageBox.Show(s);
+            MessageBox.Show(s);*/
+            if (pictureBox1.Image == null) pictureBox1.Image = image;
+            //Graphics g = Graphics.FromImage(pictureBox1.Image);
+         
+               //g.Clear(Color.Silver);
+               //pictureBox1.Image = null;
+               //pictureBox1.Image = image;
+            pictureBox1.Image = buffer;
+            
+        
+
+            counter++;
+               
+            
+            
+
+        }
+
+        private void panel2_Paint(object sender, PaintEventArgs e)
+        {
+
+        }
+
+        private void pictureBox1_MouseMove(object sender, MouseEventArgs e)
+        {
+            
+            
+            if (!startBool) return;
+
+
+
+            buffer2 = new Bitmap(buffer);
+            pictureBox1.Image = buffer2;
+            Graphics g = Graphics.FromImage(pictureBox1.Image);
+            Pen p = new Pen(Color.Black, 3);
+            Pen p2 = new Pen(Color.White, 2);
+            var cursorPosition = pictureBox1.PointToClient(Cursor.Position);
+            
+           /* g.DrawRectangle(p, e.X, e.Y, 3, 3);
+            g.DrawRectangle(p2, e.X + 1, e.Y + 1, 2, 2);*/
+            //pictureBox1.Refresh();
+
+            int width = ImageOperations.GetWidth(ImageMatrix);
+            int startNum;
+            if (!endBool)
+                startNum = start.Y * width + start.X;
+            else startNum = end.Y * width + end.X;
+            int endNum = e.Y * width + e.X;
+            //MessageBox.Show("Test 1");
+            scissor= findShortestPath(startNum, endNum);
+            // MessageBox.Show("Generated Path");
+            Pen whitePen = new Pen(Color.White, 2f);
+            Pen blackPen = new Pen(Color.Black, 0.5f);
+
+
+            Point first = new Point(0, 0), second;
+            bool f = true;
+            
+            for (int i = 0; i < scissor.Count; i++)
+            {
+                int xCoordinate, yCoordinate;
+
+                xCoordinate = scissor[i] % width;
+                yCoordinate = scissor[i] / width;
+
+                g.DrawRectangle(p2, xCoordinate, yCoordinate, 1, 1);
+
+
+            }
+            
+            pictureBox1.Refresh();
+           
+
+
+
+        }
+
+        private void pictureBox2_MouseHover(object sender, EventArgs e)
+        {
+            /*return;
+            if (!startBool) return;
+
+            buffer = new Bitmap(pictureBox1.Image);
+
+
+
+
+            Graphics g = Graphics.FromImage(pictureBox1.Image);
+            Pen p = new Pen(Color.Black, 3);
+            Pen p2 = new Pen(Color.White, 2);
+            var cursorPosition = pictureBox1.PointToClient(Cursor.Position);
+
+            //g.DrawRectangle(p, e.X, e.Y, 3, 3);
+            //g.DrawRectangle(p2, e.X + 1, e.Y + 1, 2, 2);
+            //pictureBox1.Refresh();
+
+            int width = ImageOperations.GetWidth(ImageMatrix);
+            int startNum;
+            if (!endBool)
+                startNum = start.Y * width + start.X;
+            else startNum = end.Y * width + end.X;
+            MouseEventArgs mouse = (MouseEventArgs)e;
+            int endNum =  mouse.Y * width + mouse.X;
+            //MessageBox.Show("Test 1");
+            scissor = findShortestPath(startNum, endNum);
+            // MessageBox.Show("Generated Path");
+            Pen whitePen = new Pen(Color.White, 2f);
+            Pen blackPen = new Pen(Color.Black, 0.5f);
+
+
+            Point first = new Point(0, 0), second;
+            bool f = true;
+
+            for (int i = 0; i < scissor.Count; i++)
+            {
+                int xCoordinate, yCoordinate;
+
+                xCoordinate = scissor[i] % width;
+                yCoordinate = scissor[i] / width;
+
+                g.DrawRectangle(p2, xCoordinate, yCoordinate, 1, 1);
+
+
+            }
+
+            pictureBox1.Refresh();
+            pictureBox1.Image = buffer;*/
+        }
+
+        private void pictureBox2_MouseUp(object sender, MouseEventArgs e)
+        {/*
+            if (!startBool) return;
+
+
+            buffer = new Bitmap(pictureBox1.Image);
+
+
+            //e.
+
+            Graphics g = Graphics.FromImage(pictureBox1.Image);
+            Pen p = new Pen(Color.Black, 3);
+            Pen p2 = new Pen(Color.White, 2);
+            var cursorPosition = pictureBox1.PointToClient(Cursor.Position);
+
+            /* g.DrawRectangle(p, e.X, e.Y, 3, 3);
+             g.DrawRectangle(p2, e.X + 1, e.Y + 1, 2, 2);*/
+            //pictureBox1.Refresh();
+            /*
+
+            int width = ImageOperations.GetWidth(ImageMatrix);
+            int startNum;
+            if (!endBool)
+                startNum = start.Y * width + start.X;
+            else startNum = end.Y * width + end.X;
+            int endNum = e.Y * width + e.X;
+            //MessageBox.Show("Test 1");
+            scissor = findShortestPath(startNum, endNum);
+            // MessageBox.Show("Generated Path");
+            Pen whitePen = new Pen(Color.White, 2f);
+            Pen blackPen = new Pen(Color.Black, 0.5f);
+
+
+            Point first = new Point(0, 0), second;
+            bool f = true;
+
+            for (int i = 0; i < scissor.Count; i++)
+            {
+                int xCoordinate, yCoordinate;
+
+                xCoordinate = scissor[i] % width;
+                yCoordinate = scissor[i] / width;
+
+                g.DrawRectangle(p2, xCoordinate, yCoordinate, 1, 1);
+
+
+            }
+
+            pictureBox1.Refresh();
+            pictureBox1.Image = buffer;*/
         }
 
         public List<int> getPath(Dictionary<int, KeyValuePair<int, double>> childParent, int end, int start)
@@ -329,7 +513,9 @@ namespace IntelligentScissors
         }
         private void pictureBox1_MouseClick(object sender, MouseEventArgs e)
         {
+            //buffer = new Bitmap(pictureBox1.Image);
             Point pixel = e.Location;
+            
             if (!startBool)
             {
                 start = pixel;
@@ -353,6 +539,9 @@ namespace IntelligentScissors
             g.DrawRectangle(p2, pixel.X + 1, pixel.Y + 1, 2, 2);
             pictureBox1.Refresh();
 
+            if (buffer != null) pictureBox1.Image = buffer; 
+            buffer = new Bitmap(pictureBox1.Image);
+
             if (!endBool)
                 return;
 
@@ -361,21 +550,23 @@ namespace IntelligentScissors
             int startNum = start.Y * width + start.X;
             int endNum = end.Y * width + end.X;
             //MessageBox.Show("Test 1");
-            List<int> path = findShortestPath(startNum, endNum);
+            //List<int> path = findShortestPath(startNum, endNum);
            // MessageBox.Show("Generated Path");
             Pen whitePen = new Pen(Color.White, 2f);
             Pen blackPen = new Pen(Color.Black, 0.5f);
+            
 
             Point first = new Point(0,0), second;
             bool f = true;
-            for(int i = 0;i < path.Count;i++)
+            for(int i = 0;i < scissor.Count;i++)
             {
                 int xCoordinate, yCoordinate;
 
-                xCoordinate = path[i] % width;
-                yCoordinate = path[i] / width;
+                xCoordinate = scissor[i] % width;
+                yCoordinate = scissor[i] / width;
 
                 g.DrawRectangle(p2, xCoordinate, yCoordinate, 1,1);
+                
                
                 //MessageBox.Show(path[i] + " : " + xCoordinate + ", " + yCoordinate);
                 /* if (f)
@@ -390,7 +581,10 @@ namespace IntelligentScissors
                  }*/
 
             }
+            scissor.Clear();
             pictureBox1.Refresh();
+            buffer = new Bitmap(pictureBox1.Image);
+
 
 
 
