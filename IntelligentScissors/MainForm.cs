@@ -13,7 +13,6 @@ namespace IntelligentScissors
         public Point start, end;
         public bool startBool = false, endBool = false;
         public Dictionary<int, double>[] graph;
-
         public MainForm()
         {
             InitializeComponent();
@@ -23,6 +22,8 @@ namespace IntelligentScissors
 
         private async void btnOpen_Click(object sender, EventArgs e)
         {
+            startBool = false;
+            endBool = false;
            
             OpenFileDialog openFileDialog1 = new OpenFileDialog();
             if (openFileDialog1.ShowDialog() == DialogResult.OK)
@@ -36,9 +37,19 @@ namespace IntelligentScissors
             txtHeight.Text = ImageOperations.GetHeight(ImageMatrix).ToString();
 
             //Initializing Graph
-            int width = ImageOperations.GetWidth(ImageMatrix);
-            int height = ImageOperations.GetHeight(ImageMatrix);
+            int width = 0, height = 0;
+            width = ImageOperations.GetWidth(ImageMatrix);
+            height = ImageOperations.GetHeight(ImageMatrix);
+            for (int i = 0; i < height; i++)
+            {
+                for (int j = 0; j < width; j++)
+                {
+                    double avg = (ImageMatrix[i, j].red + ImageMatrix[i, j].green + ImageMatrix[i, j].blue) / 3;
+                    ImageMatrix[i, j].red = ImageMatrix[i, j].green = ImageMatrix[i, j].blue = Convert.ToByte(avg);
+                }
+            }
 
+           
             graph = new Dictionary<int, double>[width*height];
 
             for (int i = 0; i < graph.Length; i++)
@@ -68,7 +79,7 @@ namespace IntelligentScissors
                         case 'L':
                             cost = ImageOperations.CalculateLeftPixelEnergy(x, y, ImageMatrix);
                             if (cost == 0)
-                                cost = 1E16;
+                                cost = 1E+16;
                             else
                                 cost = 1 / cost;
                             graph[i].Add(pointNum, cost);
@@ -76,7 +87,7 @@ namespace IntelligentScissors
                         case 'R':
                             cost = ImageOperations.CalculateRightPixelEnergy(x, y, ImageMatrix);
                             if (cost == 0)
-                                cost = 1E16;
+                                cost = 1E+16;
                             else
                                 cost = 1 / cost;
                             graph[i].Add(pointNum, cost);
@@ -84,7 +95,7 @@ namespace IntelligentScissors
                         case 'T':
                             cost = ImageOperations.CalculateTopPixelEnergy(x, y, ImageMatrix);
                             if (cost == 0)
-                                cost = 1E16;
+                                cost = 1E+16;
                             else
                                 cost = 1 / cost;
                             graph[i].Add(pointNum, cost);
@@ -92,7 +103,7 @@ namespace IntelligentScissors
                         case 'B':
                             cost = ImageOperations.CalculateBottomPixelEnergy(x, y, ImageMatrix);
                             if (cost == 0)
-                                cost = 1E16;
+                                cost = 1E+16;
                             else
                                 cost = 1 / cost;
                             graph[i].Add(pointNum, cost);
@@ -101,6 +112,7 @@ namespace IntelligentScissors
 
                     
                 }
+                
 
             }
 
@@ -121,7 +133,7 @@ namespace IntelligentScissors
                 s = s + "\n";
             }
 
-            MessageBox.Show("Adjacency List generated");
+            //MessageBox.Show("Adjacency List generated");
 
         }
 
@@ -131,6 +143,74 @@ namespace IntelligentScissors
             int maskSize = (int)nudMaskSize.Value ;
             ImageMatrix = ImageOperations.GaussianFilter1D(ImageMatrix, maskSize, sigma);
             ImageOperations.DisplayImage(ImageMatrix, pictureBox2);
+            int width = 0, height = 0;
+            width = ImageOperations.GetWidth(ImageMatrix);
+            height = ImageOperations.GetHeight(ImageMatrix);
+            graph = new Dictionary<int, double>[width * height];
+
+            for (int i = 0; i < graph.Length; i++)
+            {
+                int x = i % width;
+                int y = i / width;
+
+                //y * width + x
+                //left right top bottom
+                int[] xSum = { -1, 1, 0, 0 };
+                int[] ySum = { 0, 0, -1, 1 };
+                char[] direction = { 'L', 'R', 'T', 'B' };
+
+                graph[i] = new Dictionary<int, double>();
+
+                for (int j = 0; j < 4; j++)
+                {
+                    if (x + xSum[j] >= width || x + xSum[j] < 0)
+                        continue;
+                    if (y + ySum[j] >= height || y + ySum[j] < 0)
+                        continue;
+
+                    int pointNum = (y + ySum[j]) * width + x + xSum[j];
+                    double cost;
+                    switch (direction[j])
+                    {
+                        case 'L':
+                            cost = ImageOperations.CalculateLeftPixelEnergy(x, y, ImageMatrix);
+                            if (cost == 0)
+                                cost = 1E+16;
+                            else
+                                cost = 1 / cost;
+                            graph[i].Add(pointNum, cost);
+                            break;
+                        case 'R':
+                            cost = ImageOperations.CalculateRightPixelEnergy(x, y, ImageMatrix);
+                            if (cost == 0)
+                                cost = 1E+16;
+                            else
+                                cost = 1 / cost;
+                            graph[i].Add(pointNum, cost);
+                            break;
+                        case 'T':
+                            cost = ImageOperations.CalculateTopPixelEnergy(x, y, ImageMatrix);
+                            if (cost == 0)
+                                cost = 1E+16;
+                            else
+                                cost = 1 / cost;
+                            graph[i].Add(pointNum, cost);
+                            break;
+                        case 'B':
+                            cost = ImageOperations.CalculateBottomPixelEnergy(x, y, ImageMatrix);
+                            if (cost == 0)
+                                cost = 1E+16;
+                            else
+                                cost = 1 / cost;
+                            graph[i].Add(pointNum, cost);
+                            break;
+                    }
+
+
+                }
+
+
+            }
         }
 
         private void pictureBox1_Click(object sender, EventArgs e)
@@ -147,17 +227,17 @@ namespace IntelligentScissors
 
             PriorityQueue<int, double> queue = new PriorityQueue<int, double>();
 
-            bool[] visited = new bool[ImageOperations.GetHeight(ImageMatrix) * ImageOperations.GetWidth(ImageMatrix)];
+            bool[] visited = new bool[graph.Length];
 
 
             queue.Enqueue(start, 0);
-            childParent.Add(start, new KeyValuePair<int, double>(start, 0));
+            childParent.Add(start, new KeyValuePair<int, double>(-1, 0));
 
             while(queue.Count > 0)
             {
                 int currentNode = queue.Dequeue();
 
-                //Check If I Have Visited it before
+                //Check if Visited Before
                 if (visited[currentNode])
                     continue;
 
@@ -167,14 +247,18 @@ namespace IntelligentScissors
                 if (currentNode == end)
                     break;
 
+
+                //MessageBox.Show("Current : " + currentNode + " with cost : " + childParent[currentNode].Value + " From Parent : " + childParent[currentNode].Key);
                 double currentCost = childParent[currentNode].Value;
                 foreach(KeyValuePair<int, double> child in graph[currentNode])
                 {
+                    
                     if(childParent.ContainsKey(child.Key))
                     {
                         //Found A Better Path
-                        if (childParent[child.Key].Value < child.Value + currentCost && !visited[child.Key])
+                        if (childParent[child.Key].Value > child.Value + currentCost )
                         {
+                            //MessageBox.Show("Child : "+child.Key +" Child Old Cost: " + childParent[child.Key].Value + " Child New Cost : " + child.Value + currentCost);
                             childParent[child.Key] = new KeyValuePair<int, double>(currentNode, child.Value + currentCost);
                             queue.Enqueue(child.Key, child.Value + currentCost);
                         }
@@ -189,7 +273,7 @@ namespace IntelligentScissors
                 
 
             }
-            MessageBox.Show("Dijkstra Bare2a");
+            
             //Generate Path
             return getPath(childParent, end,start);
         }
@@ -199,20 +283,47 @@ namespace IntelligentScissors
 
         }
 
+        private void button1_Click(object sender, EventArgs e)
+        {
+            graph = new Dictionary<int, double>[5];
+            for (int i = 0; i < 5; i++)
+                graph[i] = new Dictionary<int, double>();
+
+            graph[0].Add(1, 6);
+            graph[0].Add(3, 1);
+            graph[1].Add(4, 2);
+            graph[1].Add(3, 2);
+            graph[1].Add(2, 5);
+            graph[2].Add(1, 5);
+            graph[2].Add(4, 5);
+            graph[3].Add(0, 1);
+            graph[3].Add(1, 2);
+            graph[3].Add(4, 1);
+            graph[4].Add(2, 5);
+            graph[4].Add(1, 2);
+            graph[4].Add(3, 1);
+            List<int> path = findShortestPath(0, 4);
+            string s = "";
+            foreach (int i in path)
+                s += i + "->";
+            MessageBox.Show(s);
+        }
+
         public List<int> getPath(Dictionary<int, KeyValuePair<int, double>> childParent, int end, int start)
         {
             List<int> result = new List<int>();
            
-            while (true)
+            while (end != -1)
             {
-                //MessageBox.Show(end + "->");
+                
+               // MessageBox.Show(end + "->");
                 result.Add(end);
                 end = childParent[end].Key;
                 
                 if (end == start)
                     break;
             }
-            
+           
             result.Add(end);
             return Enumerable.Reverse(result).ToList();
         }
@@ -249,9 +360,9 @@ namespace IntelligentScissors
             
             int startNum = start.Y * width + start.X;
             int endNum = end.Y * width + end.X;
-            MessageBox.Show("Test 1");
+            //MessageBox.Show("Test 1");
             List<int> path = findShortestPath(startNum, endNum);
-            MessageBox.Show("Generated Path");
+           // MessageBox.Show("Generated Path");
             Pen whitePen = new Pen(Color.White, 2f);
             Pen blackPen = new Pen(Color.Black, 0.5f);
 
@@ -263,22 +374,26 @@ namespace IntelligentScissors
 
                 xCoordinate = path[i] % width;
                 yCoordinate = path[i] / width;
-                if (f)
-                    first = new Point(xCoordinate, yCoordinate);
-                else
-                {
-                    second = new Point(xCoordinate, yCoordinate);
-                    g.DrawLine(whitePen, first, second);
-                    g.DrawLine(blackPen, first, second);
-                    first = second;
-                }
+
+                g.DrawRectangle(p2, xCoordinate, yCoordinate, 1,1);
+               
+                //MessageBox.Show(path[i] + " : " + xCoordinate + ", " + yCoordinate);
+                /* if (f)
+                     first = new Point(xCoordinate, yCoordinate);
+                 else
+                 {
+                     second = new Point(xCoordinate, yCoordinate);
+                     g.DrawLine(whitePen, first, second);
+                     g.DrawLine(blackPen, first, second);
+                     first = second;
+
+                 }*/
 
             }
-
-            // Draw line to screen.   
-            g.DrawLine(whitePen, start, end);
-            g.DrawLine(blackPen, start, end);
             pictureBox1.Refresh();
+
+
+
 
             /*Console.WriteLine(pixel.X + ", " + pixel.Y);
             Console.WriteLine("Top : " + ImageOperations.CalculateTopPixelEnergy(pixel.X, pixel.Y, ImageMatrix));
