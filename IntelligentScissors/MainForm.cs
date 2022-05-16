@@ -530,22 +530,23 @@ namespace IntelligentScissors
                 endBool = true;
             }
 
+           
+                Graphics g = Graphics.FromImage(pictureBox1.Image);
+                Pen p = new Pen(Color.Black, 3);
+                Pen p2 = new Pen(Color.White, 2);
+                var cursorPosition = pictureBox1.PointToClient(Cursor.Position);
+                g.DrawRectangle(p, pixel.X, pixel.Y, 3, 3);
+                g.DrawRectangle(p2, pixel.X + 1, pixel.Y + 1, 2, 2);
+                pictureBox1.Refresh();
 
-            Graphics g = Graphics.FromImage(pictureBox1.Image);
-            Pen p = new Pen(Color.Black, 3);
-            Pen p2 = new Pen(Color.White, 2);
-            var cursorPosition = pictureBox1.PointToClient(Cursor.Position);
-            g.DrawRectangle(p, pixel.X, pixel.Y, 3, 3);
-            g.DrawRectangle(p2, pixel.X + 1, pixel.Y + 1, 2, 2);
-            pictureBox1.Refresh();
-
-            if (buffer != null) pictureBox1.Image = buffer; 
-            buffer = new Bitmap(pictureBox1.Image);
+                /*if (buffer != null) pictureBox1.Image = buffer;*/
+                buffer = new Bitmap(pictureBox1.Image);
+            
 
             if (!endBool)
                 return;
 
-            int width = ImageOperations.GetWidth(ImageMatrix);
+           /* int width = ImageOperations.GetWidth(ImageMatrix);
             
             int startNum = start.Y * width + start.X;
             int endNum = end.Y * width + end.X;
@@ -580,10 +581,11 @@ namespace IntelligentScissors
 
                  }*/
 
-            }
+            //}
+            
             scissor.Clear();
-            pictureBox1.Refresh();
-            buffer = new Bitmap(pictureBox1.Image);
+            //pictureBox1.Refresh();
+            //buffer = new Bitmap(pictureBox1.Image);
 
 
 
