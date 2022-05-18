@@ -214,7 +214,15 @@ namespace IntelligentScissors
             startBool = false;
             endBool = false;
             cropClicked = false;
-            pictureBox1.Image = buffer;
+            for (int i = 0; i < paths.Count; i++)
+            {
+                for (int j = 0; j < paths[i].Count; j++)
+                    taken[paths[i][j]] = false;
+            }
+            paths.Clear();
+            ImageMatrix = ImageOperations.OpenImage(OpenedFilePath);
+            ImageOperations.DisplayImage(ImageMatrix, pictureBox1);
+            buffer = pictureBox1.Image ;
 
         }
 
@@ -344,6 +352,7 @@ namespace IntelligentScissors
 
             DrawPathInPictureBox(LinePenBlack, LinePenWhite, 0.8f);
             genreateImage();
+           
             Reset();
         }
 
