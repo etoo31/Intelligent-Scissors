@@ -423,10 +423,11 @@ namespace IntelligentScissors
                 int y = i / width;
 
 
-                // Left || Right || Top || Bottom
-                int[] xSum = { -1, 1, 0, 0 };
-                int[] ySum = { 0, 0, -1, 1 };
-                char[] direction = { 'L', 'R', 'T', 'B' };
+                // Right || Bottom || Top || Left
+
+                int[] xSum = { 1, 0, 0, -1 };
+                int[] ySum = { 0, 1, -1, 0 };
+                char[] direction = { 'R', 'B', 'T', 'L' };
 
                 graph[i] = new Dictionary<int, double>();
 
@@ -482,21 +483,46 @@ namespace IntelligentScissors
         }
         private void createOutputFile()
         {
-            string s = "";
-
+            string s = "The constructed graph\n\n";
+            
             for (int i = 0; i < graph.Length; i++)
             {
-                s = s + "The  index node" + i + "\nEdges\n";
+              
+                s = s + " The  index node" + i + "\nEdges\n";
                 foreach (KeyValuePair<int, double> x in graph[i])
                 {
-                    s = s + "edge from " + i + " To " + x.Key + " With Weights " + x.Value + "\n";
-
-                    s = "";
+                    s = s + "edge from   " + i + "  To  " + x.Key + "  With Weights  " + x.Value + "\n";
                 }
-                s = s + "\n";
+                s = s + "\n\n\n";
             }
 
+
             // ToDo: createfile.
+
+            string fileName = @"Result.txt";
+
+            try
+            {
+                // Check if file already exists. If yes, delete it.     
+                if (File.Exists(fileName))
+                {
+                    File.Delete(fileName);
+                }
+
+                // Create a new file     
+                using (FileStream fs = File.Create(fileName))
+                {
+                    // Add some text to file    
+                    Byte[] info = new UTF8Encoding(true).GetBytes(s);
+                    fs.Write(info, 0, info.Length);
+                  
+                }
+
+            }
+            catch (Exception Ex)
+            {
+                MessageBox.Show(Ex.ToString());
+            }
         }
         private void genreateImage()
         {
@@ -556,9 +582,9 @@ namespace IntelligentScissors
 
                     if(crop)
                     {
-                        CroppedMatrix[i, j].red = 0;
-                        CroppedMatrix[i, j].green = 0;
-                        CroppedMatrix[i, j].blue = 0;
+                        CroppedMatrix[i, j].red =222;
+                        CroppedMatrix[i, j].green = 222;
+                        CroppedMatrix[i, j].blue = 222;
                     }
 
                     
