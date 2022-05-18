@@ -324,7 +324,7 @@ namespace IntelligentScissors
 
             }
 
-            liveWire.Clear();
+            liveWire = null;
             pictureBox1.Refresh();
         }
 
@@ -497,60 +497,66 @@ namespace IntelligentScissors
             int width = ImageOperations.GetWidth(ImageMatrix);
             int height = ImageOperations.GetHeight(ImageMatrix);
 
-            int pixelNumber = 0;
-
+            for (int i = 0; i < paths.Count; i++)
+            {
+                for (int j = 0; j < paths[i].Count; j++)
+                {
+                    taken[paths[i][j]] = true;
+                }
+            }
+            
+            
             for(int i =0; i < height; i++)
             {
-                int lastX = -2;
-                bool inCropped = false;
-                for(int j =0; j < width; j++)
+                
+                bool crop = true;
+                int points = 0;
+                for (int j = 0; j < width; j++)
                 {
-                    
-                    if (taken[pixelNumber] && j - lastX > 1)
-                        inCropped = !inCropped;
-
-                    if (taken[pixelNumber])
-                        lastX = j;
-
-                    if (!inCropped)
+                    if (taken[i * width + j])
+                        points++;
+                }
+                for (int j =0; j < width; j++)
+                {
+                    if (taken[i*width + j])
                     {
-                        // Setting the background to white.
+                        points--;
+                        while(j < width)
+                        {
+                            if(j+1 < width)
+                            {
+                                j++;
+                                if (taken[i * width + j])
+                                {
+                                    points--;
+                                    continue;
+                                }
+                                else
+                                    break;
+                            }
+                        }
+                        
+                        crop = !crop;
+
+                        if (points == 0)
+                            crop = true;
+                        else if (points == 1)
+                            crop = false;
+                    }
+
+
+                    if(crop)
+                    {
                         CroppedMatrix[i, j].red = 0;
                         CroppedMatrix[i, j].green = 0;
                         CroppedMatrix[i, j].blue = 0;
                     }
-                 
-                    pixelNumber++;
-                }
 
-            }
-
-
-            for (int i = 0; i < width; i++)
-            {
-                int lastY = -2;
-                bool inCropped = false;
-                for (int j = 0; j < height; j++)
-                {
-
-                    pixelNumber = j * width + i;
-                    if (taken[pixelNumber] && j - lastY > 1)
-                        inCropped = !inCropped;
-
-                    if (taken[pixelNumber])
-                        lastY = j;
-
-                    if (!inCropped)
-                    {
-                        // Setting the background to white.
-                        CroppedMatrix[j, i].red = 0;
-                        CroppedMatrix[j, i].green = 0;
-                        CroppedMatrix[j, i].blue = 0;
-                    }
                     
                 }
-
             }
+
+
 
             ImageOperations.DisplayImage(CroppedMatrix, pictureBox2);
         }
