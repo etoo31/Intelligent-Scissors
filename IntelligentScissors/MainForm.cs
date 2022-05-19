@@ -15,7 +15,7 @@ namespace IntelligentScissors
         firstNode = new Point(int.MinValue, int.MinValue);
         public bool startBool = false,
                     endBool = false;
-        public Dictionary<int, double>[] graph;
+        public SortedDictionary<int, double>[] graph;
         string OpenedFilePath;
         Image buffer = null, buffer2 = null;
         List<int> liveWire;
@@ -82,7 +82,7 @@ namespace IntelligentScissors
                 int width = 0, height = 0;
                 width = ImageOperations.GetWidth(ImageMatrix);
                 height = ImageOperations.GetHeight(ImageMatrix);
-                graph = new Dictionary<int, double>[width * height];
+                graph = new SortedDictionary<int, double>[width * height];
 
                 for (int i = 0; i < graph.Length; i++)
                 {
@@ -95,7 +95,7 @@ namespace IntelligentScissors
                     int[] ySum = { 0, 0, -1, 1 };
                     char[] direction = { 'L', 'R', 'T', 'B' };
 
-                    graph[i] = new Dictionary<int, double>();
+                    graph[i] = new SortedDictionary<int, double>();
 
                     for (int j = 0; j < 4; j++)
                     {
@@ -160,7 +160,7 @@ namespace IntelligentScissors
             List<int> path = new List<int>();
 
             //Child , Parent , Cost 
-            Dictionary<int, KeyValuePair<int, double>> childParent = new Dictionary<int, KeyValuePair<int, double>>();
+            SortedDictionary<int, KeyValuePair<int, double>> childParent = new SortedDictionary<int, KeyValuePair<int, double>>();
 
             PriorityQueue<int, double> queue = new PriorityQueue<int, double>();
 
@@ -284,7 +284,7 @@ namespace IntelligentScissors
         }
 
 
-        public List<int> getPath(Dictionary<int, KeyValuePair<int, double>> childParent, int end, int start)
+        public List<int> getPath(SortedDictionary<int, KeyValuePair<int, double>> childParent, int end, int start)
         {
             List<int> result = new List<int>();
             
@@ -424,6 +424,45 @@ namespace IntelligentScissors
             try
             {
                 createOutputFile();
+                Stopwatch time = new Stopwatch();
+                time.Start();
+                string fileName = @"ConstructedGraphFormat2.txt";
+                // Check if file already exists. If yes, delete it.     
+                if (File.Exists(fileName))
+                {
+                    File.Delete(fileName);
+                }
+                //MessageBox.Show("I'm here");
+                using (FileStream fs = File.Create(fileName))
+                {// Create a new file     
+
+                    string s = "Constructed Graph: (Format: node_index|edges:(from, to, weight)... )\n";
+                    // Add some text to file    
+                    Byte[] info = new UTF8Encoding(true).GetBytes(s);
+                    fs.Write(info, 0, info.Length);
+
+                    for (int i = 0; i < graph.Length; i++)
+                    {
+
+                        s = i.ToString() + "|edges:";
+                        info = new UTF8Encoding(true).GetBytes(s);
+                        fs.Write(info, 0, info.Length);
+                        foreach (KeyValuePair<int, double> x in graph[i])
+                        {
+                            s += "("+i.ToString() + "," + x.Key +","+ x.Value + ")";
+                            
+                        }
+                        s += "\n";
+                        info = new UTF8Encoding(true).GetBytes(s);
+                        fs.Write(info, 0, info.Length);
+                    }
+                    time.Stop();
+                    s = "Graph construction took: "+time.Elapsed.Seconds + "."+time.ElapsedMilliseconds+"seconds.";
+                    info = new UTF8Encoding(true).GetBytes(s);
+                    fs.Write(info, 0, info.Length);
+
+                }
+
             }
             catch(Exception exception)
             {
@@ -438,7 +477,7 @@ namespace IntelligentScissors
 
                 StartAndEndPointChooser chooser = new StartAndEndPointChooser();
                 var result = chooser.ShowDialog();
-                //MessageBox.Show("oops");
+               
                 int width = ImageOperations.GetWidth(ImageMatrix);
                 int startNum = Program.startY * width + Program.startX;
                 int endNum = Program.endY * width + Program.endX;
@@ -446,43 +485,48 @@ namespace IntelligentScissors
                 stopwatch.Start();
                 List<int> ShortestPath = findShortestPath(startNum , endNum);
                 stopwatch.Stop();
-                string s = "The Shortest path from Node ";
-                s += startNum.ToString();
-                s += " at (" + Program.startX.ToString() + ", "+Program.startY.ToString()+") to Node " + endNum.ToString();
-                s += " at (" + Program.endX.ToString() + ", " + Program.endY + ")\n";
-                s += "Format: (node_index, x, y)\n";
-                for (int i = 0; i < ShortestPath.Count; i++)
-                {
-                    int xCoordinate, yCoordinate;
-                    xCoordinate = ShortestPath[i] % width;
-                    yCoordinate = ShortestPath[i] / width;
-                    s += "{X=" + xCoordinate.ToString() + ",Y=" + yCoordinate.ToString() + "}," + xCoordinate.ToString() + "," + yCoordinate.ToString() + ")\n";
-
-                }
-                s += "Path construction took:" + stopwatch.Elapsed.Seconds.ToString() + "." + stopwatch.Elapsed.Milliseconds.ToString() + "seconds.";
+                
                 string fileName = @"ThePath.txt";
-                try
+                // Check if file already exists. If yes, delete it.     
+                if (File.Exists(fileName))
                 {
-                    // Check if file already exists. If yes, delete it.     
-                    if (File.Exists(fileName))
-                    {
-                        File.Delete(fileName);
-                    }
+                    File.Delete(fileName);
+                }
+                using (FileStream fs = File.Create(fileName))
+                {
+                    // Add some text to file    
+                    
 
-                    // Create a new file     
-                    using (FileStream fs = File.Create(fileName))
+
+                    string s = "The Shortest path from Node ";
+                    Byte[] info = new UTF8Encoding(true).GetBytes(s);
+                    fs.Write(info, 0, info.Length);
+
+                    s = startNum.ToString()+" at (" + Program.startX.ToString() + ", " + Program.startY.ToString() + ") to Node " + endNum.ToString();
+                    s += " at (" + Program.endX.ToString() + ", " + Program.endY + ")\n";
+                    info = new UTF8Encoding(true).GetBytes(s);
+                    fs.Write(info, 0, info.Length);
+
+                    s = "Format: (node_index, x, y)\n";
+                    info = new UTF8Encoding(true).GetBytes(s);
+                    fs.Write(info, 0, info.Length);
+                    for (int i = 0; i < ShortestPath.Count; i++)
                     {
-                        // Add some text to file    
-                        Byte[] info = new UTF8Encoding(true).GetBytes(s);
+                        int xCoordinate, yCoordinate;
+                        xCoordinate = ShortestPath[i] % width;
+                        yCoordinate = ShortestPath[i] / width;
+                        s = "{X=" + xCoordinate.ToString() + ",Y=" + yCoordinate.ToString() + "}," + xCoordinate.ToString() + "," + yCoordinate.ToString() + ")\n";
+                        info = new UTF8Encoding(true).GetBytes(s);
                         fs.Write(info, 0, info.Length);
 
                     }
+                    s = "Path construction took:" + stopwatch.Elapsed.Seconds.ToString() + "." + stopwatch.Elapsed.Milliseconds.ToString() + "seconds.";
+                    info = new UTF8Encoding(true).GetBytes(s);
+                    fs.Write(info, 0, info.Length);
+                }
 
-                }
-                catch (Exception Ex)
-                {
-                    MessageBox.Show(Ex.ToString());
-                }
+                    // Create a new file     
+   
             }
             catch(Exception ex)
             {
@@ -532,7 +576,7 @@ namespace IntelligentScissors
 
         private void constructGraph(int height, int width)
         {
-            graph = new Dictionary<int, double>[width * height];
+            graph = new SortedDictionary<int, double>[width * height];
 
             // Creating Adjacency List.
             for (int i = 0; i < graph.Length; i++)
@@ -547,7 +591,7 @@ namespace IntelligentScissors
                 int[] ySum = { 0, 1, -1, 0 };
                 char[] direction = { 'R', 'B', 'T', 'L' };
 
-                graph[i] = new Dictionary<int, double>();
+                graph[i] = new SortedDictionary<int, double>();
 
                 for (int j = 0; j < 4; j++)
                 {
@@ -565,7 +609,7 @@ namespace IntelligentScissors
                         case 'L':
                             cost = ImageOperations.CalculateLeftPixelEnergy(x, y, ImageMatrix);
                             if (cost == 0)
-                                cost = 1E+16;
+                                cost = 1E16;
                             else
                                 cost = 1 / cost;
                             graph[i].Add(pointNum, cost);
@@ -573,7 +617,7 @@ namespace IntelligentScissors
                         case 'R':
                             cost = ImageOperations.CalculateRightPixelEnergy(x, y, ImageMatrix);
                             if (cost == 0)
-                                cost = 1E+16;
+                                cost = 1E16;
                             else
                                 cost = 1 / cost;
                             graph[i].Add(pointNum, cost);
@@ -581,7 +625,7 @@ namespace IntelligentScissors
                         case 'T':
                             cost = ImageOperations.CalculateTopPixelEnergy(x, y, ImageMatrix);
                             if (cost == 0)
-                                cost = 1E+16;
+                                cost = 1E16;
                             else
                                 cost = 1 / cost;
                             graph[i].Add(pointNum, cost);
@@ -589,7 +633,7 @@ namespace IntelligentScissors
                         case 'B':
                             cost = ImageOperations.CalculateBottomPixelEnergy(x, y, ImageMatrix);
                             if (cost == 0)
-                                cost = 1E+16;
+                                cost = 1E16;
                             else
                                 cost = 1 / cost;
                             graph[i].Add(pointNum, cost);
@@ -601,40 +645,44 @@ namespace IntelligentScissors
         }
         private void createOutputFile()
         {
-            string s = "The constructed graph\n\n";
-            
-            for (int i = 0; i < graph.Length; i++)
-            {
-              
-                s = s + " The  index node" + i + "\nEdges\n";
-                foreach (KeyValuePair<int, double> x in graph[i])
-                {
-                    s = s + "edge from   " + i + "  To  " + x.Key + "  With Weights  " + x.Value + "\n";
-                }
-                s = s + "\n\n\n";
-            }
-
-
-            // ToDo: createfile.
-
-            string fileName = @"Result.txt";
-
             try
             {
+                // ToDo: createfile.
+
+                string fileName = @"Result.txt";
                 // Check if file already exists. If yes, delete it.     
                 if (File.Exists(fileName))
                 {
                     File.Delete(fileName);
                 }
-
-                // Create a new file     
+                MessageBox.Show("I'm here");
                 using (FileStream fs = File.Create(fileName))
-                {
+                {// Create a new file     
+
+                    string s = "The constructed graph\n\n";
                     // Add some text to file    
                     Byte[] info = new UTF8Encoding(true).GetBytes(s);
                     fs.Write(info, 0, info.Length);
-                  
+                    
+                    for (int i = 0; i < graph.Length; i++)
+                    {
+                        
+                        s = " The  index node" + i + "\nEdges\n";
+                        info = new UTF8Encoding(true).GetBytes(s);
+                        fs.Write(info, 0, info.Length);
+                        foreach (KeyValuePair<int, double> x in graph[i])
+                        {
+                            s = "edge from   " + i + "  To  " + x.Key + "  With Weights  " + x.Value + "\n";
+                            info = new UTF8Encoding(true).GetBytes(s);
+                            fs.Write(info, 0, info.Length);
+                        }
+                        s ="\n\n\n";
+                        info = new UTF8Encoding(true).GetBytes(s);
+                        fs.Write(info, 0, info.Length);
+                    }
                 }
+               
+                //MessageBox.Show("I have fininshed");
 
             }
             catch (Exception Ex)
