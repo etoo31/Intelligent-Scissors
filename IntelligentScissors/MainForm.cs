@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Diagnostics;
 using System.Drawing;
 using System.Text;
 using System.Windows.Forms;
@@ -20,6 +21,7 @@ namespace IntelligentScissors
         List<int> liveWire;
         List<List<int>> paths = new List<List<int>>();
         bool[] taken;
+        bool completedShape = false;
 
         bool cropClicked = false;
         public MainForm()
@@ -31,110 +33,124 @@ namespace IntelligentScissors
         RGBPixel[,] CroppedMatrix;
         private async void btnOpen_Click(object sender, EventArgs e)
         {
-            startBool = false;
-            endBool = false;
-
-            OpenFileDialog openFileDialog1 = new OpenFileDialog();
-            if (openFileDialog1.ShowDialog() == DialogResult.OK)
+            try
             {
-                //Open the browsed image and display it
-                OpenedFilePath = openFileDialog1.FileName;
-                ImageMatrix = ImageOperations.OpenImage(OpenedFilePath);
-                ImageOperations.DisplayImage(ImageMatrix, pictureBox1);
-                buffer = pictureBox1.Image;
+                startBool = false;
+                endBool = false;
+
+                OpenFileDialog openFileDialog1 = new OpenFileDialog();
+                if (openFileDialog1.ShowDialog() == DialogResult.OK)
+                {
+                    //Open the browsed image and display it
+                    OpenedFilePath = openFileDialog1.FileName;
+                    ImageMatrix = ImageOperations.OpenImage(OpenedFilePath);
+                    ImageOperations.DisplayImage(ImageMatrix, pictureBox1);
+                    buffer = pictureBox1.Image;
+                }
+                txtWidth.Text = ImageOperations.GetWidth(ImageMatrix).ToString();
+                txtHeight.Text = ImageOperations.GetHeight(ImageMatrix).ToString();
+
+                //Initializing Graph
+                int width = 0, height = 0;
+                width = ImageOperations.GetWidth(ImageMatrix);
+                height = ImageOperations.GetHeight(ImageMatrix);
+
+                // Converts image to greyscale.
+                greyScale(height, width);
+
+                // Construct graph for the opened image
+                constructGraph(height, width);
             }
-            txtWidth.Text = ImageOperations.GetWidth(ImageMatrix).ToString();
-            txtHeight.Text = ImageOperations.GetHeight(ImageMatrix).ToString();
-
-            //Initializing Graph
-            int width = 0, height = 0;
-            width = ImageOperations.GetWidth(ImageMatrix);
-            height = ImageOperations.GetHeight(ImageMatrix);
-
-            // Converts image to greyscale.
-            greyScale(height, width);
-
-            // Construct graph for the opened image
-            constructGraph(height, width);
+            catch(Exception ex)
+            {
+                MessageBox.Show("Loading image failed. Please try to reload the image");
+            }
 
             // Creating Output File.
-            createOutputFile();
+            
 
         }
 
         private void btnGaussSmooth_Click(object sender, EventArgs e)
         {
-            double sigma = double.Parse(txtGaussSigma.Text);
-            int maskSize = (int)nudMaskSize.Value;
-            ImageMatrix = ImageOperations.GaussianFilter1D(ImageMatrix, maskSize, sigma);
-            ImageOperations.DisplayImage(ImageMatrix, pictureBox2);
-            int width = 0, height = 0;
-            width = ImageOperations.GetWidth(ImageMatrix);
-            height = ImageOperations.GetHeight(ImageMatrix);
-            graph = new Dictionary<int, double>[width * height];
-
-            for (int i = 0; i < graph.Length; i++)
+            try
             {
-                int x = i % width;
-                int y = i / width;
+                double sigma = double.Parse(txtGaussSigma.Text);
+                int maskSize = (int)nudMaskSize.Value;
+                ImageMatrix = ImageOperations.GaussianFilter1D(ImageMatrix, maskSize, sigma);
+                ImageOperations.DisplayImage(ImageMatrix, pictureBox2);
+                int width = 0, height = 0;
+                width = ImageOperations.GetWidth(ImageMatrix);
+                height = ImageOperations.GetHeight(ImageMatrix);
+                graph = new Dictionary<int, double>[width * height];
 
-                //y * width + x
-                //left right top bottom
-                int[] xSum = { -1, 1, 0, 0 };
-                int[] ySum = { 0, 0, -1, 1 };
-                char[] direction = { 'L', 'R', 'T', 'B' };
-
-                graph[i] = new Dictionary<int, double>();
-
-                for (int j = 0; j < 4; j++)
+                for (int i = 0; i < graph.Length; i++)
                 {
-                    if (x + xSum[j] >= width || x + xSum[j] < 0)
-                        continue;
-                    if (y + ySum[j] >= height || y + ySum[j] < 0)
-                        continue;
+                    int x = i % width;
+                    int y = i / width;
 
-                    int pointNum = (y + ySum[j]) * width + x + xSum[j];
-                    double cost;
-                    switch (direction[j])
+                    //y * width + x
+                    //left right top bottom
+                    int[] xSum = { -1, 1, 0, 0 };
+                    int[] ySum = { 0, 0, -1, 1 };
+                    char[] direction = { 'L', 'R', 'T', 'B' };
+
+                    graph[i] = new Dictionary<int, double>();
+
+                    for (int j = 0; j < 4; j++)
                     {
-                        case 'L':
-                            cost = ImageOperations.CalculateLeftPixelEnergy(x, y, ImageMatrix);
-                            if (cost == 0)
-                                cost = 1E+16;
-                            else
-                                cost = 1 / cost;
-                            graph[i].Add(pointNum, cost);
-                            break;
-                        case 'R':
-                            cost = ImageOperations.CalculateRightPixelEnergy(x, y, ImageMatrix);
-                            if (cost == 0)
-                                cost = 1E+16;
-                            else
-                                cost = 1 / cost;
-                            graph[i].Add(pointNum, cost);
-                            break;
-                        case 'T':
-                            cost = ImageOperations.CalculateTopPixelEnergy(x, y, ImageMatrix);
-                            if (cost == 0)
-                                cost = 1E+16;
-                            else
-                                cost = 1 / cost;
-                            graph[i].Add(pointNum, cost);
-                            break;
-                        case 'B':
-                            cost = ImageOperations.CalculateBottomPixelEnergy(x, y, ImageMatrix);
-                            if (cost == 0)
-                                cost = 1E+16;
-                            else
-                                cost = 1 / cost;
-                            graph[i].Add(pointNum, cost);
-                            break;
+                        if (x + xSum[j] >= width || x + xSum[j] < 0)
+                            continue;
+                        if (y + ySum[j] >= height || y + ySum[j] < 0)
+                            continue;
+
+                        int pointNum = (y + ySum[j]) * width + x + xSum[j];
+                        double cost;
+                        switch (direction[j])
+                        {
+                            case 'L':
+                                cost = ImageOperations.CalculateLeftPixelEnergy(x, y, ImageMatrix);
+                                if (cost == 0)
+                                    cost = 1E+16;
+                                else
+                                    cost = 1 / cost;
+                                graph[i].Add(pointNum, cost);
+                                break;
+                            case 'R':
+                                cost = ImageOperations.CalculateRightPixelEnergy(x, y, ImageMatrix);
+                                if (cost == 0)
+                                    cost = 1E+16;
+                                else
+                                    cost = 1 / cost;
+                                graph[i].Add(pointNum, cost);
+                                break;
+                            case 'T':
+                                cost = ImageOperations.CalculateTopPixelEnergy(x, y, ImageMatrix);
+                                if (cost == 0)
+                                    cost = 1E+16;
+                                else
+                                    cost = 1 / cost;
+                                graph[i].Add(pointNum, cost);
+                                break;
+                            case 'B':
+                                cost = ImageOperations.CalculateBottomPixelEnergy(x, y, ImageMatrix);
+                                if (cost == 0)
+                                    cost = 1E+16;
+                                else
+                                    cost = 1 / cost;
+                                graph[i].Add(pointNum, cost);
+                                break;
+                        }
+
+
                     }
 
 
                 }
-
-
+            }
+            catch(Exception ex)
+            {
+                MessageBox.Show("Please Load the Image First");
             }
         }
 
@@ -214,6 +230,7 @@ namespace IntelligentScissors
             startBool = false;
             endBool = false;
             cropClicked = false;
+            completedShape = false;
             for (int i = 0; i < paths.Count; i++)
             {
                 for (int j = 0; j < paths[i].Count; j++)
@@ -289,9 +306,6 @@ namespace IntelligentScissors
         {
             Graphics g = Graphics.FromImage(buffer);
 
-
-
-
             int width = ImageOperations.GetWidth(ImageMatrix);
 
             int counter = 2;
@@ -338,22 +352,22 @@ namespace IntelligentScissors
 
         private void crop_Click(object sender, EventArgs e)
         {
-            if (cropClicked)
+            if (!completedShape)
+            {
+                MessageBox.Show("You have to complete the shape first");
                 return;
-            cropClicked = true;
-            liveWire = findShortestPath(end.Y * ImageOperations.GetWidth(ImageMatrix) + end.X, firstNode.Y * ImageOperations.GetWidth(ImageMatrix) + firstNode.X);
-            paths.Add(liveWire);
-            //taken[paths[0][0]] = true;
-            //taken[paths[0][paths.Count - 1]] = true;
-            Pen LinePenBlack = new Pen(Color.Black, 0.5f);
-            Pen LinePenWhite = new Pen(Color.White, 0.5f);
+            }
+            try
+            {
+                
+                genreateImage();
 
-            pictureBox1.Image = buffer;
-
-            DrawPathInPictureBox(LinePenBlack, LinePenWhite, 0.8f);
-            genreateImage();
-           
-            Reset();
+                Reset();
+            }
+            catch(Exception ex)
+            {
+                MessageBox.Show("Please Load the image First");
+            }
         }
 
         private void pictureBox1_MouseClick(object sender, MouseEventArgs e)
@@ -398,6 +412,110 @@ namespace IntelligentScissors
             paths.Add(liveWire);
 
             DrawPathInPictureBox(LinePenBlack, LinePenWhite, 0.8f);
+        }
+
+        private void label3_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void gnerateGraphFile_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                createOutputFile();
+            }
+            catch(Exception exception)
+            {
+                MessageBox.Show("Please load the image first");
+            }
+        }
+
+        private void gnerateShortestPathFile_Click(object sender, EventArgs e)
+        {
+            try
+            {
+
+                StartAndEndPointChooser chooser = new StartAndEndPointChooser();
+                var result = chooser.ShowDialog();
+                //MessageBox.Show("oops");
+                int width = ImageOperations.GetWidth(ImageMatrix);
+                int startNum = Program.startY * width + Program.startX;
+                int endNum = Program.endY * width + Program.endX;
+                Stopwatch stopwatch = new Stopwatch();
+                stopwatch.Start();
+                List<int> ShortestPath = findShortestPath(startNum , endNum);
+                stopwatch.Stop();
+                string s = "The Shortest path from Node ";
+                s += startNum.ToString();
+                s += " at (" + Program.startX.ToString() + ", "+Program.startY.ToString()+") to Node " + endNum.ToString();
+                s += " at (" + Program.endX.ToString() + ", " + Program.endY + ")\n";
+                s += "Format: (node_index, x, y)\n";
+                for (int i = 0; i < ShortestPath.Count; i++)
+                {
+                    int xCoordinate, yCoordinate;
+                    xCoordinate = ShortestPath[i] % width;
+                    yCoordinate = ShortestPath[i] / width;
+                    s += "{X=" + xCoordinate.ToString() + ",Y=" + yCoordinate.ToString() + "}," + xCoordinate.ToString() + "," + yCoordinate.ToString() + ")\n";
+
+                }
+                s += "Path construction took:" + stopwatch.Elapsed.Seconds.ToString() + "." + stopwatch.Elapsed.Milliseconds.ToString() + "seconds.";
+                string fileName = @"ThePath.txt";
+                try
+                {
+                    // Check if file already exists. If yes, delete it.     
+                    if (File.Exists(fileName))
+                    {
+                        File.Delete(fileName);
+                    }
+
+                    // Create a new file     
+                    using (FileStream fs = File.Create(fileName))
+                    {
+                        // Add some text to file    
+                        Byte[] info = new UTF8Encoding(true).GetBytes(s);
+                        fs.Write(info, 0, info.Length);
+
+                    }
+
+                }
+                catch (Exception Ex)
+                {
+                    MessageBox.Show(Ex.ToString());
+                }
+            }
+            catch(Exception ex)
+            {
+                MessageBox.Show("something went wrong maybe there is no image loaded or the start point or the end point are out of range");
+            }
+        }
+
+        private void txtHeight_TextChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        //Complete Shape Button
+        private void button1_Click(object sender, EventArgs e)
+        {
+            try 
+            {
+                liveWire = findShortestPath(end.Y * ImageOperations.GetWidth(ImageMatrix) + end.X, firstNode.Y * ImageOperations.GetWidth(ImageMatrix) + firstNode.X);
+                paths.Add(liveWire);
+
+                Pen LinePenBlack = new Pen(Color.Black, 0.5f);
+                Pen LinePenWhite = new Pen(Color.White, 0.5f);
+
+                pictureBox1.Image = buffer;
+
+                DrawPathInPictureBox(LinePenBlack, LinePenWhite, 0.8f);
+                completedShape = true;
+            }
+            catch(Exception ex)
+            {
+                MessageBox.Show("something went wrong maybe there is no image loaded or there is no shape to complete it ");
+            }
+
         }
 
         private void greyScale(int height, int width)

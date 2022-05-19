@@ -9,6 +9,7 @@ namespace IntelligentScissors
         /// <summary>
         /// The main entry point for the application.
         /// </summary>
+        public static  int startX ,startY , endX,endY; 
         [STAThread]
         static void Main()
         {

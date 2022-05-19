@@ -45,6 +45,9 @@ namespace IntelligentScissors
             this.panel1 = new System.Windows.Forms.Panel();
             this.panel2 = new System.Windows.Forms.Panel();
             this.crop = new System.Windows.Forms.Button();
+            this.gnerateGraphFile = new System.Windows.Forms.Button();
+            this.gnerateShortestPathFile = new System.Windows.Forms.Button();
+            this.CompleteShape = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.nudMaskSize)).BeginInit();
@@ -78,7 +81,7 @@ namespace IntelligentScissors
             // btnOpen
             // 
             this.btnOpen.Font = new System.Drawing.Font("Tahoma", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point);
-            this.btnOpen.Location = new System.Drawing.Point(480, 657);
+            this.btnOpen.Location = new System.Drawing.Point(490, 749);
             this.btnOpen.Margin = new System.Windows.Forms.Padding(5, 4, 5, 4);
             this.btnOpen.Name = "btnOpen";
             this.btnOpen.Size = new System.Drawing.Size(110, 96);
@@ -91,7 +94,7 @@ namespace IntelligentScissors
             // 
             this.label1.AutoSize = true;
             this.label1.Font = new System.Drawing.Font("Tahoma", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point);
-            this.label1.Location = new System.Drawing.Point(217, 604);
+            this.label1.Location = new System.Drawing.Point(217, 591);
             this.label1.Margin = new System.Windows.Forms.Padding(5, 0, 5, 0);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(162, 24);
@@ -112,7 +115,7 @@ namespace IntelligentScissors
             // btnGaussSmooth
             // 
             this.btnGaussSmooth.Font = new System.Drawing.Font("Tahoma", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point);
-            this.btnGaussSmooth.Location = new System.Drawing.Point(629, 657);
+            this.btnGaussSmooth.Location = new System.Drawing.Point(695, 743);
             this.btnGaussSmooth.Margin = new System.Windows.Forms.Padding(5, 4, 5, 4);
             this.btnGaussSmooth.Name = "btnGaussSmooth";
             this.btnGaussSmooth.Size = new System.Drawing.Size(110, 96);
@@ -125,18 +128,19 @@ namespace IntelligentScissors
             // 
             this.label3.AutoSize = true;
             this.label3.Font = new System.Drawing.Font("Tahoma", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point);
-            this.label3.Location = new System.Drawing.Point(789, 661);
+            this.label3.Location = new System.Drawing.Point(852, 749);
             this.label3.Margin = new System.Windows.Forms.Padding(5, 0, 5, 0);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(94, 21);
             this.label3.TabIndex = 7;
             this.label3.Text = "Mask Size";
+            this.label3.Click += new System.EventHandler(this.label3_Click);
             // 
             // label4
             // 
             this.label4.AutoSize = true;
             this.label4.Font = new System.Drawing.Font("Tahoma", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point);
-            this.label4.Location = new System.Drawing.Point(789, 721);
+            this.label4.Location = new System.Drawing.Point(842, 818);
             this.label4.Margin = new System.Windows.Forms.Padding(5, 0, 5, 0);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(120, 21);
@@ -146,12 +150,13 @@ namespace IntelligentScissors
             // txtHeight
             // 
             this.txtHeight.Font = new System.Drawing.Font("Tahoma", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point);
-            this.txtHeight.Location = new System.Drawing.Point(375, 717);
+            this.txtHeight.Location = new System.Drawing.Point(394, 818);
             this.txtHeight.Margin = new System.Windows.Forms.Padding(5, 4, 5, 4);
             this.txtHeight.Name = "txtHeight";
             this.txtHeight.ReadOnly = true;
             this.txtHeight.Size = new System.Drawing.Size(75, 27);
             this.txtHeight.TabIndex = 8;
+            this.txtHeight.TextChanged += new System.EventHandler(this.txtHeight_TextChanged);
             // 
             // nudMaskSize
             // 
@@ -161,7 +166,7 @@ namespace IntelligentScissors
             0,
             0,
             0});
-            this.nudMaskSize.Location = new System.Drawing.Point(913, 659);
+            this.nudMaskSize.Location = new System.Drawing.Point(984, 743);
             this.nudMaskSize.Margin = new System.Windows.Forms.Padding(5, 4, 5, 4);
             this.nudMaskSize.Maximum = new decimal(new int[] {
             99,
@@ -185,7 +190,7 @@ namespace IntelligentScissors
             // txtWidth
             // 
             this.txtWidth.Font = new System.Drawing.Font("Tahoma", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point);
-            this.txtWidth.Location = new System.Drawing.Point(375, 659);
+            this.txtWidth.Location = new System.Drawing.Point(394, 760);
             this.txtWidth.Margin = new System.Windows.Forms.Padding(5, 4, 5, 4);
             this.txtWidth.Name = "txtWidth";
             this.txtWidth.ReadOnly = true;
@@ -196,7 +201,7 @@ namespace IntelligentScissors
             // 
             this.label5.AutoSize = true;
             this.label5.Font = new System.Drawing.Font("Tahoma", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point);
-            this.label5.Location = new System.Drawing.Point(302, 663);
+            this.label5.Location = new System.Drawing.Point(314, 763);
             this.label5.Margin = new System.Windows.Forms.Padding(5, 0, 5, 0);
             this.label5.Name = "label5";
             this.label5.Size = new System.Drawing.Size(61, 21);
@@ -207,7 +212,7 @@ namespace IntelligentScissors
             // 
             this.label6.AutoSize = true;
             this.label6.Font = new System.Drawing.Font("Tahoma", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point);
-            this.label6.Location = new System.Drawing.Point(302, 721);
+            this.label6.Location = new System.Drawing.Point(308, 818);
             this.label6.Margin = new System.Windows.Forms.Padding(5, 0, 5, 0);
             this.label6.Name = "label6";
             this.label6.Size = new System.Drawing.Size(67, 21);
@@ -217,7 +222,7 @@ namespace IntelligentScissors
             // txtGaussSigma
             // 
             this.txtGaussSigma.Font = new System.Drawing.Font("Tahoma", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point);
-            this.txtGaussSigma.Location = new System.Drawing.Point(913, 717);
+            this.txtGaussSigma.Location = new System.Drawing.Point(984, 815);
             this.txtGaussSigma.Margin = new System.Windows.Forms.Padding(5, 4, 5, 4);
             this.txtGaussSigma.Name = "txtGaussSigma";
             this.txtGaussSigma.Size = new System.Drawing.Size(75, 27);
@@ -233,7 +238,7 @@ namespace IntelligentScissors
             this.panel1.Location = new System.Drawing.Point(16, 19);
             this.panel1.Margin = new System.Windows.Forms.Padding(5, 4, 5, 4);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(582, 568);
+            this.panel1.Size = new System.Drawing.Size(584, 568);
             this.panel1.TabIndex = 15;
             // 
             // panel2
@@ -241,28 +246,64 @@ namespace IntelligentScissors
             this.panel2.AutoScroll = true;
             this.panel2.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
             this.panel2.Controls.Add(this.pictureBox2);
-            this.panel2.Location = new System.Drawing.Point(629, 19);
+            this.panel2.Location = new System.Drawing.Point(695, 19);
             this.panel2.Margin = new System.Windows.Forms.Padding(5, 4, 5, 4);
             this.panel2.Name = "panel2";
-            this.panel2.Size = new System.Drawing.Size(559, 568);
+            this.panel2.Size = new System.Drawing.Size(579, 568);
             this.panel2.TabIndex = 16;
             // 
             // crop
             // 
-            this.crop.Location = new System.Drawing.Point(541, 619);
+            this.crop.Location = new System.Drawing.Point(577, 704);
             this.crop.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.crop.Name = "crop";
-            this.crop.Size = new System.Drawing.Size(138, 31);
+            this.crop.Size = new System.Drawing.Size(136, 37);
             this.crop.TabIndex = 17;
             this.crop.Text = "Crop";
             this.crop.UseVisualStyleBackColor = true;
             this.crop.Click += new System.EventHandler(this.crop_Click);
             // 
+            // gnerateGraphFile
+            // 
+            this.gnerateGraphFile.Location = new System.Drawing.Point(23, 767);
+            this.gnerateGraphFile.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.gnerateGraphFile.Name = "gnerateGraphFile";
+            this.gnerateGraphFile.Size = new System.Drawing.Size(167, 78);
+            this.gnerateGraphFile.TabIndex = 18;
+            this.gnerateGraphFile.Text = "Generate graph file";
+            this.gnerateGraphFile.UseVisualStyleBackColor = true;
+            this.gnerateGraphFile.Click += new System.EventHandler(this.gnerateGraphFile_Click);
+            // 
+            // gnerateShortestPathFile
+            // 
+            this.gnerateShortestPathFile.Location = new System.Drawing.Point(1160, 763);
+            this.gnerateShortestPathFile.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.gnerateShortestPathFile.Name = "gnerateShortestPathFile";
+            this.gnerateShortestPathFile.Size = new System.Drawing.Size(158, 79);
+            this.gnerateShortestPathFile.TabIndex = 19;
+            this.gnerateShortestPathFile.Text = "Gnerate Shortest Path File";
+            this.gnerateShortestPathFile.UseVisualStyleBackColor = true;
+            this.gnerateShortestPathFile.Click += new System.EventHandler(this.gnerateShortestPathFile_Click);
+            // 
+            // CompleteShape
+            // 
+            this.CompleteShape.Location = new System.Drawing.Point(577, 651);
+            this.CompleteShape.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.CompleteShape.Name = "CompleteShape";
+            this.CompleteShape.Size = new System.Drawing.Size(136, 45);
+            this.CompleteShape.TabIndex = 20;
+            this.CompleteShape.Text = "Complete Shape";
+            this.CompleteShape.UseVisualStyleBackColor = true;
+            this.CompleteShape.Click += new System.EventHandler(this.button1_Click);
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1206, 769);
+            this.ClientSize = new System.Drawing.Size(1352, 868);
+            this.Controls.Add(this.CompleteShape);
+            this.Controls.Add(this.gnerateShortestPathFile);
+            this.Controls.Add(this.gnerateGraphFile);
             this.Controls.Add(this.crop);
             this.Controls.Add(this.panel2);
             this.Controls.Add(this.panel1);
@@ -313,6 +354,9 @@ namespace IntelligentScissors
         private System.Windows.Forms.Panel panel1;
         private System.Windows.Forms.Panel panel2;
         private Button crop;
+        private Button gnerateGraphFile;
+        private Button gnerateShortestPathFile;
+        private Button CompleteShape;
     }
 }
 
