@@ -24,6 +24,8 @@ namespace IntelligentScissors
         bool completedShape = false;
 
         bool cropClicked = false;
+
+        bool autoAnchorBool = false;
         public MainForm()
         {
             InitializeComponent();
@@ -250,7 +252,8 @@ namespace IntelligentScissors
 
         private void pictureBox1_MouseMove(object sender, MouseEventArgs e)
         {
-            if (!startBool) return;
+
+            if (!startBool || completedShape) return;
 
             buffer2 = new Bitmap(buffer);
             pictureBox1.Image = buffer2;
@@ -266,7 +269,51 @@ namespace IntelligentScissors
             int endNum = e.Y * width + e.X;
 
             liveWire = findShortestPath(startNum, endNum);
+            if (autoAnchorBool)
+            {
+                try
+                {
+                    List<int> temp = liveWire;
+                    int frequency = Convert.ToInt32(FrequencyTxtBox.Text);
+                    while (temp.Count > frequency)
+                    {
+                        int n = temp[frequency];
+                        end = new Point(n % ImageOperations.GetWidth(ImageMatrix), n / ImageOperations.GetWidth(ImageMatrix));
 
+                        liveWire = new List<int>(frequency);
+
+                        for (int i = 0; i < frequency; i++)
+                        {
+
+                            liveWire.Add(temp[0]);
+                            temp.RemoveAt(0);
+                        }
+
+                        //paths.Add(liveWire);
+                        if (!endBool)
+                            endBool = true;
+
+                        Graphics gg = Graphics.FromImage(buffer);
+                        Pen p = new Pen(Color.Black, 3);
+                        Pen p2 = new Pen(Color.White, 2);
+
+
+                        gg.DrawRectangle(p, end.X, end.Y, 3, 3);
+                        gg.DrawRectangle(p2, end.X + 1, end.Y + 1, 2, 2);
+                        DrawPathInPictureBox(new Pen(Color.White, 0.5f), new Pen(Color.Black, 0.5f), 0.8f);
+                        liveWire = temp;
+                       
+                        
+                    }
+                }
+                catch (Exception ex)
+                {
+
+                    ToggleAutoAnchor();
+                    MessageBox.Show("Please Enter A Valid Frequency " + ex.Message);
+
+                }
+            }
             Pen LiveWirePen = new Pen(Color.Yellow, 0.5f);
 
             for (int i = 0; i < liveWire.Count; i++)
@@ -304,8 +351,8 @@ namespace IntelligentScissors
 
         public void DrawPathInPictureBox(Pen Line1, Pen Line2, float size)
         {
+            paths.Add(liveWire);
             Graphics g = Graphics.FromImage(buffer);
-
             int width = ImageOperations.GetWidth(ImageMatrix);
 
             int counter = 2;
@@ -372,6 +419,11 @@ namespace IntelligentScissors
 
         private void pictureBox1_MouseClick(object sender, MouseEventArgs e)
         {
+            if(e.Button == MouseButtons.Right)
+            {
+                ToggleAutoAnchor();
+                return;
+            }
             //buffer = new Bitmap(pictureBox1.Image);
             Point pixel = e.Location;
             if (firstNode == new Point(int.MinValue, int.MinValue))
@@ -409,7 +461,7 @@ namespace IntelligentScissors
             
             Pen LinePenBlack = new Pen(Color.Black, 0.5f);
             Pen LinePenWhite = new Pen(Color.White, 0.5f);
-            paths.Add(liveWire);
+            //paths.Add(liveWire);
 
             DrawPathInPictureBox(LinePenBlack, LinePenWhite, 0.8f);
         }
@@ -472,6 +524,7 @@ namespace IntelligentScissors
 
         private void gnerateShortestPathFile_Click(object sender, EventArgs e)
         {
+            Reset();
             try
             {
 
@@ -479,11 +532,22 @@ namespace IntelligentScissors
                 var result = chooser.ShowDialog();
                
                 int width = ImageOperations.GetWidth(ImageMatrix);
-                int startNum = Program.startY * width + Program.startX;
-                int endNum = Program.endY * width + Program.endX;
+                int x1 = Program.startX, y1 = Program.startY;
+                int x2 = Program.endX, y2 = Program.endY;
+
+                int startNum = y1 * width + x1;
+                int endNum = y2 * width + x2;
                 Stopwatch stopwatch = new Stopwatch();
                 stopwatch.Start();
                 List<int> ShortestPath = findShortestPath(startNum , endNum);
+                liveWire = ShortestPath;
+                DrawPathInPictureBox(new Pen(Color.White, 0.5f), new Pen(Color.Black, 0.5f), 0.8f);
+               
+                start = new Point(x1, y1);
+                end = new Point(x2, y2);
+                firstNode = new Point(x1, y1);
+                startBool = true;
+                endBool = true;
                 stopwatch.Stop();
                 
                 string fileName = @"ThePath.txt";
@@ -545,7 +609,7 @@ namespace IntelligentScissors
             try 
             {
                 liveWire = findShortestPath(end.Y * ImageOperations.GetWidth(ImageMatrix) + end.X, firstNode.Y * ImageOperations.GetWidth(ImageMatrix) + firstNode.X);
-                paths.Add(liveWire);
+                //paths.Add(liveWire);
 
                 Pen LinePenBlack = new Pen(Color.Black, 0.5f);
                 Pen LinePenWhite = new Pen(Color.White, 0.5f);
@@ -572,6 +636,26 @@ namespace IntelligentScissors
                     ImageMatrix[i, j].red = ImageMatrix[i, j].green = ImageMatrix[i, j].blue = Convert.ToByte(avg);
                 }
             }
+        }
+
+        private void button1_Click_1(object sender, EventArgs e)
+        {
+            ToggleAutoAnchor();
+        }
+
+        private void pictureBox1_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void textBox1_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            e.Handled = !char.IsDigit(e.KeyChar) && !char.IsControl(e.KeyChar);
+        }
+
+        private void button2_Click(object sender, EventArgs e)
+        {
+            Reset();
         }
 
         private void constructGraph(int height, int width)
@@ -690,6 +774,21 @@ namespace IntelligentScissors
                 MessageBox.Show(Ex.ToString());
             }
         }
+
+        private void ToggleAutoAnchor()
+        {
+            autoAnchorBool = !autoAnchorBool;
+            if (autoAnchorBool)
+            {
+                autoAnchorLabel.Text = "Auto Anchor : Enabled";
+                autoAnchorLabel.ForeColor = Color.Green;
+            }else
+            {
+                autoAnchorLabel.Text = "Auto Anchor : Disabled";
+                autoAnchorLabel.ForeColor = Color.Red;
+            }
+        }
+
         private void genreateImage()
         {
 

@@ -66,13 +66,14 @@ namespace IntelligentScissors
         {
             if (StartX.Text.Length == 0 || StartY.Text.Length == 0 || EndX.Text.Length == 0 || EndY.Text.Length == 0)
             {
-                MessageBox.Show("Please wirte down the start and end Points");
+                MessageBox.Show("Please write down the start and end Points");
                 return;
             }
             Program.startX = Convert.ToInt32(StartX.Text);
             Program.startY = Convert.ToInt32(StartY.Text);
             Program.endX = Convert.ToInt32(EndX.Text);
             Program.endY = Convert.ToInt32(EndY.Text);
+
             this.Close();
             
         }
